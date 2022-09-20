@@ -1,0 +1,50 @@
+# 29092 でアクセスする
+# もしオンラインでアクセスさせる場合には KAFKA_CFG_ADVERTISED_LISTENERS の PLAINTEXT_HOST://{host-name|ip}:29092
+
+version: "3.5"
+services:
+  zookeeper:
+    image: bitnami/zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - network0
+
+  kafka-0:
+    image: bitnami/kafka
+    hostname: kafka-0
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      - KAFKA_CFG_BROKER_ID=0
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+    networks:
+      - network0
+
+  kafka-rest-0:
+    image: nodefluent/kafka-rest
+    ports:
+      - "8083:8083"
+    depends_on:
+      - kafka-0
+      - zookeeper
+    environment:
+      DEBUG: "*"
+      KAFKA_REST_DEBUG: "all"
+      KAFKA_REST_HTTP_PORT: 8083
+      KAFKA_REST_CONSUMER_METADATA_BROKER_LIST: "kafka-0:9092"
+      KAFKA_REST_PRODUCER_METADATA_BROKER_LIST: "kafka-0:9092"
+    networks:
+      - network0
+
+networks:
+  network0:

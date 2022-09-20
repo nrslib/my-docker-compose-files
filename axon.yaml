@@ -1,0 +1,12 @@
+version: "3.5"
+services:
+  axon-server:
+    image: axoniq/axonserver
+    ports:
+      - "8024:8024"
+      - "8124:8124"
+    networks:
+      - network0
+
+networks:
+  network0:
